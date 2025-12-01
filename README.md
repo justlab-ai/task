@@ -18,9 +18,32 @@
 
 ### Quick Actions
 
-[**View Tasks**](tasks/) · [**Submit Update**](updates/) · [**See Contributions**](https://github.com/justlab-ai/weekly-tasks/graphs/contributors)
+<a href="tasks/">
+  <img src="https://img.shields.io/badge/VIEW_TASKS-📋_See_Assignments-blue?style=for-the-badge&logoColor=white" alt="View Tasks">
+</a>
+&nbsp;&nbsp;
+<a href="updates/">
+  <img src="https://img.shields.io/badge/SUBMIT_UPDATE-✏️_Add_Progress-green?style=for-the-badge&logoColor=white" alt="Submit Update">
+</a>
+&nbsp;&nbsp;
+<a href="templates/">
+  <img src="https://img.shields.io/badge/TEMPLATES-📄_Get_Started-orange?style=for-the-badge&logoColor=white" alt="Templates">
+</a>
 
 </div>
+
+---
+
+## Quick Links
+
+| Resource | Description | Link |
+|:---------|:------------|:----:|
+| **Current Tasks** | View this week's task assignments | [tasks/](tasks/) |
+| **Submit Updates** | Add your weekly progress | [updates/](updates/) |
+| **Task Template** | Template for creating new tasks | [task-template.md](templates/task-template.md) |
+| **Update Template** | Template for member updates | [update-template.md](templates/update-template.md) |
+| **Contributors** | See team contribution graph | [View](https://github.com/justlab-ai/weekly-tasks/graphs/contributors) |
+| **Commit History** | Track all changes | [View](https://github.com/justlab-ai/weekly-tasks/commits/main) |
 
 ---
 
@@ -92,8 +115,6 @@ weekly-tasks/
 <div align="center">
 
 **All contributions are transparent**
-
-[Commit History](https://github.com/justlab-ai/weekly-tasks/commits/main) · [Contributors Graph](https://github.com/justlab-ai/weekly-tasks/graphs/contributors)
 
 <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=100&section=footer" width="100%">
 
