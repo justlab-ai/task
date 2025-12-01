@@ -29,6 +29,10 @@
 <a href="templates/">
   <img src="https://img.shields.io/badge/TEMPLATES-📄_Get_Started-orange?style=for-the-badge&logoColor=white" alt="Templates">
 </a>
+&nbsp;&nbsp;
+<a href="https://github.com/orgs/justlab-ai/projects/2">
+  <img src="https://img.shields.io/badge/PROJECT_BOARD-🗂️_Kanban_View-purple?style=for-the-badge&logoColor=white" alt="Project Board">
+</a>
 
 </div>
 
@@ -42,6 +46,7 @@
 | **Submit Updates** | Add your weekly progress | [updates/](updates/) |
 | **Task Template** | Template for creating new tasks | [task-template.md](templates/task-template.md) |
 | **Update Template** | Template for member updates | [update-template.md](templates/update-template.md) |
+| **Project Board** | Kanban-style task board | [View](https://github.com/orgs/justlab-ai/projects/2) |
 | **Contributors** | See team contribution graph | [View](https://github.com/justlab-ai/weekly-tasks/graphs/contributors) |
 | **Commit History** | Track all changes | [View](https://github.com/justlab-ai/weekly-tasks/commits/main) |
 
