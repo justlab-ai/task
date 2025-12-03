@@ -26,11 +26,33 @@
 
 ---
 
+## Workflow
+
+### Creating Tasks
+1. Go to [Issues](https://github.com/justlab-ai/task/issues/new/choose) and select **Task** template
+2. Fill in the description, deliverables, and optional deadline
+3. Task will be tracked on the [Project Board](https://github.com/orgs/justlab-ai/projects/2)
+
+### Submitting Work
+1. Complete the task as described in the issue
+2. Submit your work as a comment on the issue
+3. Once approved, submission is saved to `submissions/issue-{N}-{task-name}.md`
+4. Issue is closed with a link to the submission file
+
+### Submissions Folder
+Completed submissions are stored in [`submissions/`](./submissions/) with naming convention:
+```
+issue-{number}-{task-slug}.md
+```
+
+---
+
 ## Quick Links
 
 | Resource | Description | Link |
 |:---------|:------------|:----:|
 | **Project Board** | Kanban-style task board | [View](https://github.com/orgs/justlab-ai/projects/2) |
+| **Submissions** | Completed task submissions | [View](./submissions/) |
 | **Contributors** | See team contribution graph | [View](https://github.com/justlab-ai/task/graphs/contributors) |
 | **Commit History** | Track all changes | [View](https://github.com/justlab-ai/task/commits/main) |
 
