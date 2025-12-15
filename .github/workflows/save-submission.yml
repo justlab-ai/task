@@ -64,21 +64,23 @@ jobs:
 
             // Create submission file content
             const date = new Date().toISOString().split('T')[0];
-            const fileContent = `# ${issue.title}
-
-**Issue:** #${issue.number}
-**Submitted by:** @${submitter}
-**Closed on:** ${date}
-**Labels:** ${issue.labels.map(l => l.name).join(', ') || 'None'}
-
----
-
-${submissionContent}
-
----
-
-*Auto-generated from [Issue #${issue.number}](${issue.html_url})*
-`;
+            const bold = '**';
+            const fileContent = [
+              `# ${issue.title}`,
+              '',
+              `${bold}Issue:${bold} #${issue.number}`,
+              `${bold}Submitted by:${bold} @${submitter}`,
+              `${bold}Closed on:${bold} ${date}`,
+              `${bold}Labels:${bold} ${issue.labels.map(l => l.name).join(', ') || 'None'}`,
+              '',
+              '---',
+              '',
+              submissionContent,
+              '',
+              '---',
+              '',
+              `_Auto-generated from [Issue #${issue.number}](${issue.html_url})_`
+            ].join('\n');
 
             // Ensure submissions directory exists
             const submissionsDir = 'submissions';
