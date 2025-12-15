@@ -3,6 +3,12 @@ name: Save Submission on Issue Close
 on:
   issues:
     types: [closed]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to process'
+        required: true
+        type: number
 
 permissions:
   contents: write
