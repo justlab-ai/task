@@ -29,14 +29,12 @@ jobs:
             const fs = require('fs');
             const issue = context.payload.issue;
 
-            // Get all comments on the issue
             const comments = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issue.number
             });
 
-            // Find submission comment (look for "## Submission" or last substantial comment)
             let submissionContent = null;
             let submitter = issue.user.login;
 
@@ -50,100 +48,68 @@ jobs:
               }
             }
 
-            // If no comment found, use issue body
             if (!submissionContent) {
               submissionContent = issue.body || 'No submission content found.';
             }
 
-            // Create slug from issue title
             const slug = issue.title
               .toLowerCase()
               .replace(/[^a-z0-9]+/g, '-')
               .replace(/^-|-$/g, '')
               .substring(0, 50);
 
-            // Create submission file content
             const date = new Date().toISOString().split('T')[0];
-            const bold = '**';
-            const fileContent = [
-              `# ${issue.title}`,
-              '',
-              `${bold}Issue:${bold} #${issue.number}`,
-              `${bold}Submitted by:${bold} @${submitter}`,
-              `${bold}Closed on:${bold} ${date}`,
-              `${bold}Labels:${bold} ${issue.labels.map(l => l.name).join(', ') || 'None'}`,
-              '',
-              '---',
-              '',
-              submissionContent,
-              '',
-              '---',
-              '',
-              `_Auto-generated from [Issue #${issue.number}](${issue.html_url})_`
-            ].join('\n');
+            const labels = issue.labels.map(l => l.name).join(', ') || 'None';
 
-            // Ensure submissions directory exists
+            const fileContent = `# ${issue.title}\n\n` +
+              `**Issue:** #${issue.number}\n` +
+              `**Submitted by:** @${submitter}\n` +
+              `**Closed on:** ${date}\n` +
+              `**Labels:** ${labels}\n\n` +
+              `---\n\n` +
+              `${submissionContent}\n\n` +
+              `---\n\n` +
+              `_Auto-generated from [Issue #${issue.number}](${issue.html_url})_\n`;
+
             const submissionsDir = 'submissions';
             if (!fs.existsSync(submissionsDir)) {
               fs.mkdirSync(submissionsDir);
             }
 
-            // Write submission file
             const filename = `${submissionsDir}/issue-${issue.number}-${slug}.md`;
             fs.writeFileSync(filename, fileContent);
 
-            // Update contributors file
             const contributorsFile = 'CONTRIBUTORS.md';
-            let contributorsContent = '';
-
-            if (fs.existsSync(contributorsFile)) {
-              contributorsContent = fs.readFileSync(contributorsFile, 'utf8');
-            } else {
-              contributorsContent = `# Contributors
-
-This file tracks all contributions to JustLab AI tasks.
-
-| Contributor | Tasks Completed | Last Contribution |
-|-------------|-----------------|-------------------|
-`;
-            }
-
-            // Parse existing contributors
-            const lines = contributorsContent.split('\n');
-            const tableStart = lines.findIndex(l => l.startsWith('|----------'));
             let contributors = {};
 
-            if (tableStart !== -1) {
-              for (let i = tableStart + 1; i < lines.length; i++) {
-                const match = lines[i].match(/\|\s*@(\w+)\s*\|\s*(\d+)\s*\|/);
+            if (fs.existsSync(contributorsFile)) {
+              const content = fs.readFileSync(contributorsFile, 'utf8');
+              const lines = content.split('\n');
+              for (const line of lines) {
+                const match = line.match(/@(\w+)\s*\|\s*(\d+)/);
                 if (match) {
                   contributors[match[1]] = parseInt(match[2]);
                 }
               }
             }
 
-            // Update contributor count
             contributors[submitter] = (contributors[submitter] || 0) + 1;
 
-            // Rebuild contributors table
             const sortedContributors = Object.entries(contributors)
               .sort((a, b) => b[1] - a[1]);
 
-            let newTable = `# Contributors
+            let newTable = '# Contributors\n\n' +
+              'This file tracks all contributions to JustLab AI tasks.\n\n' +
+              '| Contributor | Tasks Completed | Last Contribution |\n' +
+              '|-------------|-----------------|-------------------|\n';
 
-This file tracks all contributions to JustLab AI tasks.
-
-| Contributor | Tasks Completed | Last Contribution |
-|-------------|-----------------|-------------------|
-`;
             for (const [user, count] of sortedContributors) {
-              const isCurrentUser = user === submitter ? date : '-';
-              newTable += `| @${user} | ${count} | ${isCurrentUser} |\n`;
+              const lastDate = user === submitter ? date : '-';
+              newTable += `| @${user} | ${count} | ${lastDate} |\n`;
             }
 
             fs.writeFileSync(contributorsFile, newTable);
 
-            // Set outputs for commit
             core.setOutput('filename', filename);
             core.setOutput('submitter', submitter);
 
@@ -151,7 +117,6 @@ This file tracks all contributions to JustLab AI tasks.
         env:
           SUBMITTER: ${{ steps.extract.outputs.submitter }}
         run: |
-          # Use the actual submitter's GitHub noreply email for proper attribution
           git config --local user.email "${SUBMITTER}@users.noreply.github.com"
           git config --local user.name "${SUBMITTER}"
           git add submissions/ CONTRIBUTORS.md
@@ -165,9 +130,10 @@ This file tracks all contributions to JustLab AI tasks.
         with:
           script: |
             const submitter = process.env.SUBMITTER;
+            const issueNum = context.payload.issue.number;
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.payload.issue.number,
-              body: `Submission saved to \`submissions/issue-${context.payload.issue.number}-*.md\`\n\nThank you for your contribution, @${submitter}!`
+              issue_number: issueNum,
+              body: `Submission saved! Thank you for your contribution, @${submitter}!`
             });
