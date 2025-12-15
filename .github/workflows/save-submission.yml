@@ -1,0 +1,158 @@
+name: Save Submission on Issue Close
+
+on:
+  issues:
+    types: [closed]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  save-submission:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract and save submission
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const issue = context.payload.issue;
+
+            // Get all comments on the issue
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number
+            });
+
+            // Find submission comment (look for "## Submission" or last substantial comment)
+            let submissionContent = null;
+            let submitter = issue.user.login;
+
+            for (const comment of comments.data.reverse()) {
+              if (comment.body.toLowerCase().includes('submission') ||
+                  comment.body.toLowerCase().includes('deliverable') ||
+                  comment.body.length > 200) {
+                submissionContent = comment.body;
+                submitter = comment.user.login;
+                break;
+              }
+            }
+
+            // If no comment found, use issue body
+            if (!submissionContent) {
+              submissionContent = issue.body || 'No submission content found.';
+            }
+
+            // Create slug from issue title
+            const slug = issue.title
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/^-|-$/g, '')
+              .substring(0, 50);
+
+            // Create submission file content
+            const date = new Date().toISOString().split('T')[0];
+            const fileContent = `# ${issue.title}
+
+**Issue:** #${issue.number}
+**Submitted by:** @${submitter}
+**Closed on:** ${date}
+**Labels:** ${issue.labels.map(l => l.name).join(', ') || 'None'}
+
+---
+
+${submissionContent}
+
+---
+
+*Auto-generated from [Issue #${issue.number}](${issue.html_url})*
+`;
+
+            // Ensure submissions directory exists
+            const submissionsDir = 'submissions';
+            if (!fs.existsSync(submissionsDir)) {
+              fs.mkdirSync(submissionsDir);
+            }
+
+            // Write submission file
+            const filename = `${submissionsDir}/issue-${issue.number}-${slug}.md`;
+            fs.writeFileSync(filename, fileContent);
+
+            // Update contributors file
+            const contributorsFile = 'CONTRIBUTORS.md';
+            let contributorsContent = '';
+
+            if (fs.existsSync(contributorsFile)) {
+              contributorsContent = fs.readFileSync(contributorsFile, 'utf8');
+            } else {
+              contributorsContent = `# Contributors
+
+This file tracks all contributions to JustLab AI tasks.
+
+| Contributor | Tasks Completed | Last Contribution |
+|-------------|-----------------|-------------------|
+`;
+            }
+
+            // Parse existing contributors
+            const lines = contributorsContent.split('\n');
+            const tableStart = lines.findIndex(l => l.startsWith('|----------'));
+            let contributors = {};
+
+            if (tableStart !== -1) {
+              for (let i = tableStart + 1; i < lines.length; i++) {
+                const match = lines[i].match(/\|\s*@(\w+)\s*\|\s*(\d+)\s*\|/);
+                if (match) {
+                  contributors[match[1]] = parseInt(match[2]);
+                }
+              }
+            }
+
+            // Update contributor count
+            contributors[submitter] = (contributors[submitter] || 0) + 1;
+
+            // Rebuild contributors table
+            const sortedContributors = Object.entries(contributors)
+              .sort((a, b) => b[1] - a[1]);
+
+            let newTable = `# Contributors
+
+This file tracks all contributions to JustLab AI tasks.
+
+| Contributor | Tasks Completed | Last Contribution |
+|-------------|-----------------|-------------------|
+`;
+            for (const [user, count] of sortedContributors) {
+              const isCurrentUser = user === submitter ? date : '-';
+              newTable += `| @${user} | ${count} | ${isCurrentUser} |\n`;
+            }
+
+            fs.writeFileSync(contributorsFile, newTable);
+
+            // Set outputs for commit
+            core.setOutput('filename', filename);
+            core.setOutput('submitter', submitter);
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add submissions/ CONTRIBUTORS.md
+          git commit -m "Add submission for issue #${{ github.event.issue.number }} by @${{ github.event.issue.user.login }}" || exit 0
+          git push
+
+      - name: Comment on issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: `Submission saved to \`submissions/issue-${context.payload.issue.number}-*.md\`\n\nThank you for your contribution, @${context.payload.issue.user.login}!`
+            });
